@@ -7,7 +7,7 @@ package bot;
 import ai.abstraction.AbstractAction;
 import ai.abstraction.AbstractionLayerAI;
 import ai.abstraction.Harvest;
-import ai.abstraction.pathfinding.AStarPathFinding;
+import ai.abstraction.pathfinding.FloodFillPathFinding;
 import ai.core.AI;
 import ai.abstraction.pathfinding.PathFinding;
 import ai.core.ParameterSpecification;
@@ -37,7 +37,7 @@ public class BurgerBot extends AbstractionLayerAI {
     UnitType lightType;
 
     public BurgerBot(UnitTypeTable a_utt) {
-        this(a_utt, new AStarPathFinding());
+        this(a_utt, new FloodFillPathFinding());
     }
 
     public BurgerBot(UnitTypeTable a_utt, PathFinding a_pf) {
@@ -429,7 +429,7 @@ public class BurgerBot extends AbstractionLayerAI {
     public List<ParameterSpecification> getParameters() {
         List<ParameterSpecification> parameters = new ArrayList<>();
 
-        parameters.add(new ParameterSpecification("PathFinding", PathFinding.class, new AStarPathFinding()));
+        parameters.add(new ParameterSpecification("PathFinding", PathFinding.class, new FloodFillPathFinding()));
 
         return parameters;
     }
