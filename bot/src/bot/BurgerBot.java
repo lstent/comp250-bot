@@ -265,12 +265,14 @@ public class BurgerBot extends AbstractionLayerAI {
                 //resourcesUsed += baseType.cost;
             }
         }
+        
+        //If there are no barracks and more than 1 worker build a barrack at X+2 & Y+2 of the chosen workers position
         if ((nbarracks == 0) && (!freeWorkers.isEmpty()) && nworkers > 1
                 && p.getResources() >= barracksType.cost) {
             
             int resources = p.getResources();
             Unit u = freeWorkers.remove(0);   
-            buildIfNotAlreadyBuilding(u,barracksType,u.getX(),u.getY(),reservedPositions,p,pgs);
+            buildIfNotAlreadyBuilding(u,barracksType,u.getX()+2,u.getY()+2,reservedPositions,p,pgs);
             resourcesUsed += barracksType.cost;
             buildingRacks = true;
                 
