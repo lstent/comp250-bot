@@ -7,7 +7,7 @@ package tests;
 
 import ai.core.AI;
 import ai.RandomBiasedAI;
-import ai.abstraction.WorkerRush;
+import ai.abstraction.cRush.CRush_V2;
 import ai.abstraction.pathfinding.BFSPathFinding;
 import ai.mcts.naivemcts.NaiveMCTS;
 import bot.*;
@@ -36,8 +36,8 @@ public class GameVisualSimulationTest {
         boolean gameover = false;
         
         //AI ai1 = new WorkerRush(utt, new BFSPathFinding());
-        AI ai1 = new BurgerBot(utt);
-        AI ai2 = new WorkerRush(utt);
+        AI ai1 = new ChipBot(utt);
+        AI ai2 = new CRush_V2(utt);
 
         JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_BLACK);
 //        JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_WHITE);

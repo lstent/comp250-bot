@@ -25,7 +25,7 @@ import rts.units.*;
  *
  * @author Cristiano D'Angelo
  */
-public class BurgerBot extends AbstractionLayerAI {
+public class ChipBot extends AbstractionLayerAI {
 
     Random r = new Random();
     protected UnitTypeTable utt;
@@ -36,11 +36,14 @@ public class BurgerBot extends AbstractionLayerAI {
     UnitType heavyType;
     UnitType lightType;
 
-    public BurgerBot(UnitTypeTable a_utt) {
+	int ranged = 0;
+	int light = 0;
+
+	public ChipBot(UnitTypeTable a_utt) {
         this(a_utt, new FloodFillPathFinding());
     }
 
-    public BurgerBot(UnitTypeTable a_utt, PathFinding a_pf) {
+    public ChipBot(UnitTypeTable a_utt, PathFinding a_pf) {
         super(a_pf);
         reset(a_utt);
     }
@@ -56,10 +59,11 @@ public class BurgerBot extends AbstractionLayerAI {
         barracksType = utt.getUnitType("Barracks");
         rangedType = utt.getUnitType("Ranged");
         lightType = utt.getUnitType("Light");
+        heavyType = utt.getUnitType("Heavy");
     }
 
     public AI clone() {
-        return new BurgerBot(utt, pf);
+        return new ChipBot(utt, pf);
     }
 
     boolean buildingRacks = false;
@@ -120,9 +124,16 @@ public class BurgerBot extends AbstractionLayerAI {
             if (u.getType().canAttack && !u.getType().canHarvest
                     && u.getPlayer() == player
                     && gs.getActionAssignment(u) == null) {
-                if (u.getType() == rangedType) {
+                if (u.getType() == rangedType) 
+                {
                     rangedUnitBehavior(u, p, gs);
-                } else {
+                } 
+                if (u.getType() == lightType)
+                {
+                	lightUnitBehaviour(u, p, gs);
+                }
+                else 
+                {
                     meleeUnitBehavior(u, p, gs);
                 }
             }
@@ -130,8 +141,8 @@ public class BurgerBot extends AbstractionLayerAI {
 
         return translateActions(player, gs);
     }
-    //
-    public void baseBehavior(Unit u, Player p, PhysicalGameState pgs) {
+
+	public void baseBehavior(Unit u, Player p, PhysicalGameState pgs) {
 
         int nbases = 0;
         int nbarracks = 0;
@@ -152,7 +163,7 @@ public class BurgerBot extends AbstractionLayerAI {
                 nbases++;
             }
         }
-        if (nworkers < (nbases + 1) && p.getResources() >= workerType.cost) {
+        if (nworkers < (nbases +1) && p.getResources() >= workerType.cost) {
             train(u, workerType);
         }
 
@@ -167,8 +178,17 @@ public class BurgerBot extends AbstractionLayerAI {
     }
 
     public void barracksBehavior(Unit u, Player p, PhysicalGameState pgs) {
-        if (p.getResources() >= rangedType.cost) {
+        if (p.getResources() >= rangedType.cost
+        		&& ranged <= light) 
+        {
            train(u, rangedType);
+           ranged++;
+        }
+        else if (p.getResources() >= lightType.cost
+        		&& light < ranged)
+        {
+        	train(u, lightType);
+        	light++;
         }
     }
 
@@ -190,6 +210,36 @@ public class BurgerBot extends AbstractionLayerAI {
             attack(u, closestEnemy);
         }
     }
+    
+    private void lightUnitBehaviour(Unit u, Player p, GameState gs) 
+    {
+        PhysicalGameState pgs = gs.getPhysicalGameState();
+        Unit closestEnemy = null;
+        Unit closestRacks = null;
+        int closestDistance = 0;
+        for (Unit u2 : pgs.getUnits()) {
+            if (u2.getPlayer() >= 0 && u2.getPlayer() != p.getID()) {
+                int d = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
+                if (closestEnemy == null || d < closestDistance) {
+                    closestEnemy = u2;
+                    closestDistance = d;
+                }
+            }
+            if (u2.getType() == barracksType && u2.getPlayer() == p.getID()) {
+                int d = Math.abs(u2.getX() - u.getX()) + Math.abs(u2.getY() - u.getY());
+                if (closestRacks == null || d < closestDistance) {
+                    closestRacks = u2;
+                    closestDistance = d;
+                }
+            }
+        }
+        if (closestEnemy != null) {
+//            System.out.println("LightRushAI.meleeUnitBehavior: " + u + " attacks " + closestEnemy);
+            rangedAttack(u, closestEnemy, closestRacks);
+
+        }
+	}
+
 
     public void rangedUnitBehavior(Unit u, Player p, GameState gs) {
         PhysicalGameState pgs = gs.getPhysicalGameState();
@@ -243,8 +293,8 @@ public class BurgerBot extends AbstractionLayerAI {
             }
         }
 
-        if (workers.size() > (nbases + 1)) {
-            for (int n = 0; n < (nbases + 1); n++) {
+        if (workers.size() > (nbases)) {
+            for (int n = 0; n < (nbases); n++) {
                 freeWorkers.add(workers.get(0));
                 workers.remove(0);
             }
@@ -266,14 +316,12 @@ public class BurgerBot extends AbstractionLayerAI {
                 //resourcesUsed += baseType.cost;
             }
         }
-        
-        //If there are no barracks and more than 1 worker build a barrack at X+2 & Y+2 of the chosen workers position
-        if ((nbarracks <= 1) && (!freeWorkers.isEmpty()) && nworkers > 1
+        if ((nbarracks == 0) && (!freeWorkers.isEmpty()) && nworkers > 0
                 && p.getResources() >= barracksType.cost) {
             
             int resources = p.getResources();
             Unit u = freeWorkers.remove(0);   
-            buildIfNotAlreadyBuilding(u,barracksType,u.getX()+2,u.getY()+2,reservedPositions,p,pgs);
+            buildIfNotAlreadyBuilding(u,barracksType,u.getX(),u.getY(),reservedPositions,p,pgs);
             resourcesUsed += barracksType.cost;
             buildingRacks = true;
                 
@@ -283,7 +331,7 @@ public class BurgerBot extends AbstractionLayerAI {
             resourcesUsed =  barracksType.cost * nbarracks;
         }
         
-        if (nbarracks > 1) {
+        if (nbarracks > 0) {
             buildingRacks = true;
         }
 
